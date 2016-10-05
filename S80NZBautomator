@@ -2,7 +2,7 @@
 . /opt/etc/autonzb.conf
 
 ####################################################################################################
-#Entware-ng Version S80.2
+#Entware-ng Version S80.1
 ##############################
 # This script 'should' download install and configure your folder structure to enable SABnzbd, 
 # CouchPotato Sickbeard Headphones and NzbtoMedia scripts. you can set which of them to install via 
@@ -19,20 +19,15 @@
 ###############################
 
 if [ "$packageupdate" == 1 ]; then
- opkg update
- sleep 2
- opkg install python python-pip curl libcurl pyopenssl python-cheetah zlib wget unrar rtmpdump pkg-config openssh-client make libxslt libffi libiconv-full libgpg-error libgcrypt ncurses-bin git git-http gcc bzip2 autoconf automake binutils unrar
- sed -i 's/packageupdate="1"/\packageupdate="0"/' /opt/etc/autonzb.conf
-fi
-###############################  
-#get current SAB version number  
-###############################  
-  
-if [ "$SABnzbd" == 1 ]; then    
-  sabpkg=$(wget http://sabnzbd.org/download/ -O - | grep "Linux" | awk -F'"' '{print $2}' | awk -F'/download' '{print $2}')  
-  sablcl=`echo $sabpkg | sed 's/.*\(SAB.*\.gz\).*/\1/'`  
-  sabtmpdir=`printf "SABnzbd" && echo $sabpkg | sed 's/.*SABnzbd\(.*\)-.*/\1/'`  
-fi  
+
+opkg update
+
+sleep 2
+
+opkg install python python-pip curl libcurl pyopenssl python-cheetah zlib wget unrar rtmpdump pkg-config openssh-client make libxslt libffi libiconv-full libgpg-error libgcrypt ncurses-bin git git-http gcc bzip2 autoconf automake binutils unrar
+sed -i 's/packageupdate="1"/\packageupdate="0"/' /opt/etc/autonzb.conf
+
+fi 
 
 ###############################
 #create directories
@@ -56,39 +51,25 @@ fi
 
 if [ "$Nzbget" == 1 ] && [ ! -f /opt/bin/nzbget ]; then
    opkg install nzbget
+ 
 elif [ "$packageupdate" == 1 ]; then
    opkg install nzbget
+
 fi
 
 ################################
 #install Sabnzbd
 ################################
 
-if [ "$SABnzbd" == 1 ]; then  
-   if [ ! -d "$sabbackup" ]; then  
-	mkdir "$sabbackup" 
-   fi  
-   
-   cd "$sabbackup"  
-      
-     if [ "$sablcl" != *.gz ]; then  
-        rm -f "$sabbackup"/*  
-    
-        wget "$sabpkg" -O "$sablcl"  
-          tar xvzf "$sablcl"   
-          cp -r "$sabtmpdir"/* "$sabdata"  
-          rm -r "$sabtmpdir"  
-           
-        elif [ ! -f "$sabdata"/SABnzbd.py ]; then  
-          wget "$sabpkg" -O "$sablcl"  
-           tar xvzf "$sablcl"   
-           cp -r "$sabtmpdir"/* "$sabdata"  
-	   rm -r "$sabtmpdir"  
-  
-     else  
-          echo "SAB Already up-to-date." 
-sleep 2            
-     fi
+if [ "$SABnzbd" == 1 ]; then
+   if [ -f "$sabdata"/SABnzbd.py ]; then
+	cd "$sabdata"
+	git pull https://github.com/sabnzbd/sabnzbd	
+	  else
+	git clone https://github.com/sabnzbd/sabnzbd -b master "$sabdata"
+	mkdir -p -m 777 "$sabconfig"
+   sleep 2
+   fi
 fi
 
 #################################
@@ -99,7 +80,7 @@ if [ "$CouchPotato" == 1 ]; then
    if [ -d "$couchdata" ]; then
 	cd "$couchdata"
 	git pull https://github.com/RuudBurger/CouchPotatoServer	
-	else
+	  else
 	git clone https://github.com/RuudBurger/CouchPotatoServer "$couchdata"
 	mkdir -p -m 777 "$couchconfig"
    sleep 2
@@ -114,7 +95,7 @@ if [ "$SickRage" == 1 ]; then
    if [ -d "$sickdata" ]; then 
       cd "$sickdata"
       git pull  https://github.com/SickRage/SickRage.git
-      else
+   else
       git clone  https://github.com/SickRage/SickRage.git "$sickdata"
       mkdir -p -m 777 "$sickconfig"
    sleep 2
@@ -129,7 +110,7 @@ if [ "$Headphones" == 1 ]; then
    if [ -d "$headdata" ]; then 
       cd "$headdata"
       git pull https://github.com/rembo10/headphones.git
-      else
+   else
       git clone https://github.com/rembo10/headphones.git "$headdata"
         mkdir -p -m 777 "$headconfig"
    sleep 2
@@ -156,6 +137,7 @@ fi
 #################################
 #Install NzbtoMedia scripts
 #################################
+
 if [ "$NzbtoMedia" == 1 ]; then
    if [ -d "$nzbtomedia" ]; then 
 	cd "$nzbtomedia"
@@ -183,21 +165,21 @@ if [ "$SABnzbd" == 1 ]; then
          let i+=1
          /bin/echo -n "$i, "
          if [ $i = 45 ]; then
-            echo -n "Tired of waiting, killing $SABPKG_NAME now"
+            echo -n " Tired of waiting, killing $SABPKG_NAME now "
             kill -9 $Pid
          fi
       done
       rm -f $SABPID_FILE
 
-      echo "$SABPKG_NAME Shutdown"
+      echo " $SABPKG_NAME Shutdown "
 	fi
 
   sleep 2
 
-  if [ -f "$sabconfig" ]; then
-			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d -f "$sabconfig" 
+  if [ -f "$sabconfig/sabnzbd.ini" ]; then
+			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d --pidfile $SABPID_FILE" -f $sabconfig"/sabnzbd.ini 
 			else
-			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d -s 0.0.0.0:8090 -f "$sabconfig" 
+			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d -s 0.0.0.0:8090 --pidfile $SABPID_FILE" -f "$sabconfig"/sabnzbd.ini
             sleep 2
   fi
   else
@@ -208,6 +190,14 @@ fi
 if [ "$Nzbget" == 1 ]; then
 
   sh $init/S75nzbget stop
+
+ sleep 2
+
+if [ "$packageupdate" == 1 ]; then
+ 
+ opkg install nzbget
+
+fi
 
  sleep 2
 
@@ -230,23 +220,23 @@ if [ -f $CPID_FILE ]; then
          let i+=1
          /bin/echo -n "$i, "
          if [ $i = 45 ]; then
-            echo -n "Tired of waiting, killing $CPKG_NAME now"
+            echo -n " Tired of waiting, killing $CPKG_NAME now "
             kill -9 $Pid
          fi
       done
       rm -f $CPID_FILE
 
-      echo "$CPKG_NAME Shutdown"
+      echo " $CPKG_NAME Shutdown "
 fi
       
 sleep 2
 
  $python "$couchdata"/CouchPotato.py --daemon --data_dir $CCONFIG_DIR --config $CCONFIG_DIR/settings.conf --pid_file $CPID_FILE
 
-   echo -n "$CPKG_NAME Started"
+   echo -n " $CPKG_NAME Started "
       else
 
-   echo "Couchpotato not Installed"
+   echo " Couchpotato not Installed "
    fi
 
 sleep 2
@@ -264,13 +254,13 @@ if [ -f $SPID_FILE ]; then
          let i+=1
          /bin/echo -n "$i, "
          if [ $i = 45 ]; then
-            echo -n "Tired of waiting, killing $SPKG_NAME now"
+            echo -n " Tired of waiting, killing $SPKG_NAME now "
             kill -9 $Pid
          fi
       done
       rm -f $SPID_FILE
 
-      echo "$SPKG_NAME Shutdown"
+      echo " $SPKG_NAME Shutdown "
 fi
       
 sleep 2
@@ -278,10 +268,10 @@ sleep 2
 
    $python "$sickdata"/SickBeard.py --datadir "$sickconfig" --config "$sickconfig"/config.ini -d --pidfile $SPID_FILE
 
-echo -n "$SPKG_NAME Started"   
+echo -n " $SPKG_NAME Started "   
       else
 
-   echo "SickRage not Installed"
+   echo " SickRage not Installed "
    fi
 
 sleep 2
@@ -299,21 +289,21 @@ if [ -f $HPID_FILE ]; then
          let i+=1
          /bin/echo -n "$i, "
          if [ $i = 45 ]; then
-            echo -n "Tired of waiting, killing $HPKG_NAME now"
+            echo -n " Tired of waiting, killing $HPKG_NAME now "
             kill -9 $Pid
          fi
       done
       rm -f $HPID_FILE
 
-      echo "$HPKG_NAME Shutdown"
+      echo " $HPKG_NAME Shutdown "
 fi
 sleep 2
 $python "$headdata"/Headphones.py --datadir "$headconfig" -d --pidfile $HPID_FILE
 
-   echo -n "$HPKG_NAME Started"
+   echo -n " $HPKG_NAME Started "
       else
 
-   echo "Headphones not Installed"
+   echo " Headphones not Installed "
 fi
 
 sleep 2
@@ -331,7 +321,7 @@ if [ -f $MPID_FILE ]; then
          let i+=1
          /bin/echo -n "$i, "
          if [ $i = 45 ]; then
-            echo -n "Tired of waiting, killing $MPKG_NAME now"
+            echo -n " Tired of waiting, killing $MPKG_NAME now "
             kill -9 $Pid
          fi
       done
