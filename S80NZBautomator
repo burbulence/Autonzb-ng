@@ -35,9 +35,7 @@ fi
 
 cd "$useradmin"
 
-if [ ! -d "$sabdata" ]; then
-            mkdir -p -m 777 "$sabdata"
-            mkdir -p -m 777 "$configdir"/sabnzbd
+if [ ! -d "$useradmin"/download/incomplete ]; then
             mkdir -p -m 777 "$useradmin"/download/complete/movie 
             mkdir -p -m 777 "$useradmin"/download/complete/tv
             mkdir -p -m 777 "$useradmin"/download/incomplete
@@ -67,7 +65,8 @@ if [ "$SABnzbd" == 1 ]; then
 	git pull https://github.com/sabnzbd/sabnzbd	
 	  else
 	git clone https://github.com/sabnzbd/sabnzbd -b master "$sabdata"
-	mkdir -p -m 777 "$sabconfig"
+        mkdir -p -m 777 "$configdir"/sabnzbd
+        mkdir -p -m 777 "$sabconfig"
    sleep 2
    fi
 fi
