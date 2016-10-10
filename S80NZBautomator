@@ -178,7 +178,7 @@ if [ "$SABnzbd" == 1 ]; then
   if [ -f "$sabconfig/sabnzbd.ini" ]; then
 			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d --pidfile $"SABPID_FILE" -f $"sabconfig"/sabnzbd.ini 
 			else
-			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d -s 0.0.0.0:8090 --pidfile $"SABPID_FILE" -f "$sabconfig"/sabnzbd.ini
+			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d -s 0.0.0.0:8085 --pidfile $"SABPID_FILE" -f "$sabconfig"/sabnzbd.ini
             sleep 2
   fi
   else
