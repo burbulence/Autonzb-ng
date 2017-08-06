@@ -51,9 +51,6 @@ fi
 
 if [ "$Nzbget" == 1 ] && [ ! -f /opt/bin/nzbget ]; then
    opkg install nzbget
- 
-elif [ "$packageupdate" == 1 ]; then
-   opkg install nzbget
 
 fi
 
@@ -180,8 +177,16 @@ if [ "$SABnzbd" == 1 ]; then
 			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d --pidfile $SABPID_FILE" -f $sabconfig"/sabnzbd.ini 
 			else
 			PYTHON_EGG_CACHE=/tmp $python "$sabdata"/SABnzbd.py -b 0 -d -s 0.0.0.0:8090 --pidfile $SABPID_FILE" -f "$sabconfig"/sabnzbd.ini
-            sleep 2
-  fi
+  fi			
+
+  if 
+    pgrep -f "sabnzbd" > /dev/null
+ then
+    echo " $SABPKG_NAME Started "
+  fi 
+  
+  sleep 2
+	   
   else
 
    echo "SABnzbd not Installed"
@@ -190,12 +195,11 @@ fi
 if [ "$Nzbget" == 1 ]; then
 
   sh $init/S75nzbget stop
-
- sleep 2
-
-if [ "$packageupdate" == 1 ]; then
  
- opkg install nzbget
+ sleep 2
+ opkg update
+ Sleep 2 
+ opkg upgrade nzbget
 
 fi
 
@@ -233,11 +237,15 @@ sleep 2
 
  $python "$couchdata"/CouchPotato.py --daemon --data_dir $CCONFIG_DIR --config $CCONFIG_DIR/settings.conf --pid_file $CPID_FILE
 
-   echo -n " $CPKG_NAME Started "
+  if 
+    pgrep -f "couch" > /dev/null
+ then
+    echo " $CPKG_NAME Started "
+  fi  
       else
 
    echo " Couchpotato not Installed "
-   fi
+fi
 
 sleep 2
 
@@ -267,8 +275,12 @@ sleep 2
 
 
    $python "$sickdata"/SickBeard.py --datadir "$sickconfig" --config "$sickconfig"/config.ini -d --pidfile $SPID_FILE
-
-echo -n " $SPKG_NAME Started "   
+  
+  if 
+    pgrep -f "sick" > /dev/null
+ then
+    echo " $SPKG_NAME Started "
+  fi   
       else
 
    echo " SickRage not Installed "
@@ -299,8 +311,11 @@ if [ -f $HPID_FILE ]; then
 fi
 sleep 2
 $python "$headdata"/Headphones.py --datadir "$headconfig" -d --pidfile $HPID_FILE
-
-   echo -n " $HPKG_NAME Started "
+  if 
+    pgrep -f "Head" > /dev/null
+ then
+    echo " $HPKG_NAME Started "
+  fi 
       else
 
    echo " Headphones not Installed "
@@ -333,7 +348,12 @@ fi
 sleep 2
 
    $python "$mylardata"/Mylar.py --datadir "$mylarconfig" --config "$mylarconfig"/config.ini  -d --pidfile $MPID_FILE
-   echo -n "$MPKG_NAME Started"
+   
+   if 
+    pgrep -f "mylar" > /dev/null
+ then
+    echo " $MPKG_NAME Started "
+  fi 
       else
 
    echo "Mylar not Installed"
